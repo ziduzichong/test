@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电子科学与技术协会</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>⚡</text></svg>">
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#/home">⚡ 电子科学与技术协会</a>
+      <div class="nav-links" id="navLinks">
+        <a href="#/home" class="nav-link" data-route="/home">首页</a>
+        <a href="#/announcements" class="nav-link" data-route="/announcements">公告</a>
+        <a href="#/members" class="nav-link" data-route="/members">成员</a>
+        <a href="#/dashboard" class="nav-link nav-auth" data-route="/dashboard" style="display:none">管理面板</a>
+        <a href="#/login" class="nav-link nav-login" data-route="/login">登录</a>
+        <a href="#" class="nav-link nav-logout" data-route="/logout" style="display:none">退出</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="菜单">☰</button>
+    </div>
+  </nav>
+  <main id="main-content">
+    <div class="loading">加载中...</div>
+  </main>
+  <footer id="footer">
+    <div class="footer-inner">
+      <p>&copy; 2026 电子科学与技术协会 &middot; 基于 Node.js + SQLite 构建</p>
+    </div>
+  </footer>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
