@@ -137,7 +137,8 @@ app.get('/api/auth/session', async (req, res) => {
 app.get('/api/announcements', async (req, res) => {
   try {
     const { category, page = 1, limit = 50 } = req.query;
-    const pageNum = Math.max(1, parseInt(page)), limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
     let where = ''; const params = [];
     if (category) { where = ' WHERE category = ?'; params.push(category); }
 
