@@ -370,13 +370,27 @@ def announcement_toggle(request, pk):
 
 
 @login_required
+@require_admin
 def file_delete_api(request, pk):
-    """删除文件（API）：POST 删除并返回空响应让 HTMX 移除行"""
+    """删除文件（API）：仅 admin，POST 删除并返回空响应让 HTMX 移除行"""
     if request.method == 'POST':
         f = get_object_or_404(UploadedFile, pk=pk)
         f.file.delete(save=False)
         f.delete()
         return HttpResponse('')
+    return JsonResponse({'ok': False}, status=405)
+
+
+@login_required
+def file_edit_api(request, pk):
+    """编辑文件属性：category / description / is_public，editor 及以上可操作"""
+    if request.method == 'POST':
+        f = get_object_or_404(UploadedFile, pk=pk)
+        f.category = request.POST.get('category', f.category)
+        f.description = request.POST.get('description', '')
+        f.is_public = request.POST.get('is_public') == 'on'
+        f.save(update_fields=['category', 'description', 'is_public'])
+        return JsonResponse({'ok': True})
     return JsonResponse({'ok': False}, status=405)
 
 

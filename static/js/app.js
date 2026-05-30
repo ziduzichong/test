@@ -241,6 +241,45 @@ function openAwardEditor(id) {
   });
 }
 
+// ========== 文件编辑模态 ==========
+function openFileEditor(id) {
+  var row = document.getElementById('file-row-' + id);
+  var name = row ? row.dataset.name : '';
+  var cat = row ? row.dataset.category : 'learning';
+  var desc = row ? row.dataset.desc : '';
+  var pub = row ? row.dataset.public === 'true' : false;
+  var cats = ['learning','project','circuit','firmware','video','tool','installer'];
+  var catLabels = ['学习资料','项目代码','电路设计','固件','教学视频','软件工具','系统镜像'];
+  var catOpts = cats.map(function(c, i) {
+    return '<option value="' + c + '"' + (cat === c ? ' selected' : '') + '>' + catLabels[i] + '</option>';
+  }).join('');
+
+  var html =
+    '<div class="modal-header"><h3>编辑文件 — ' + escHtml(name) + '</h3><button class="modal-close">&times;</button></div>' +
+    '<div class="form-group"><label>分类</label><select class="form-control" id="fileEditCat">' + catOpts + '</select></div>' +
+    '<div class="form-group"><label>描述</label><input class="form-control" id="fileEditDesc" value="' + escAttr(desc) + '"></div>' +
+    '<div class="form-group"><label><input type="checkbox" id="fileEditPub"' + (pub ? ' checked' : '') + '> 公开下载</label></div>' +
+    '<div class="form-actions" style="display:flex;gap:8px;margin-top:16px">' +
+      '<button class="btn btn-outline modal-close-btn">取消</button>' +
+      '<button class="btn btn-primary" id="saveFileEditBtn">保存</button>' +
+    '</div>';
+  openModal(html);
+
+  document.getElementById('saveFileEditBtn').addEventListener('click', function() {
+    var fd = new FormData();
+    fd.append('category', document.getElementById('fileEditCat').value);
+    fd.append('description', document.getElementById('fileEditDesc').value);
+    fd.append('is_public', document.getElementById('fileEditPub').checked ? 'on' : '');
+    fd.append('csrfmiddlewaretoken', getCSRF());
+    fetch('/api/files/' + id + '/edit/', { method: 'POST', body: fd })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.ok) { closeModal(); location.reload(); }
+        else { showToast('修改失败', 'error'); }
+      });
+  });
+}
+
 // ========== 账号创建模态 ==========
 function openAccountCreator() {
   var html =

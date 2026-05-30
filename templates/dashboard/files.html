@@ -1,64 +1,63 @@
 {% extends "base.html" %}
-{% block title %}文件管理 — 电子科学与技术协会{% endblock %}
-
+{% block title %}文件管理{% endblock %}
 {% block content %}
-<div class="page-header page-header-between">
+<div class="page-header">
     <h1>文件管理</h1>
-    <a href="{% url 'dashboard_upload' %}" class="btn btn-primary">上传文件</a>
+    <a href="{% url 'dashboard_upload' %}" class="btn btn-primary">+ 上传文件</a>
 </div>
 
-<!-- Category Filter -->
-<div class="filter-bar">
-    <a href="{% url 'dashboard_files' %}" class="btn btn-filter {% if not category %}btn-filter-active{% endif %}">全部</a>
-    <a href="{% url 'dashboard_files' %}?category=document" class="btn btn-filter {% if category == 'document' %}btn-filter-active{% endif %}">文档</a>
-    <a href="{% url 'dashboard_files' %}?category=software" class="btn btn-filter {% if category == 'software' %}btn-filter-active{% endif %}">软件</a>
-    <a href="{% url 'dashboard_files' %}?category=image" class="btn btn-filter {% if category == 'image' %}btn-filter-active{% endif %}">图片</a>
-    <a href="{% url 'dashboard_files' %}?category=other" class="btn btn-filter {% if category == 'other' %}btn-filter-active{% endif %}">其他</a>
+<div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">
+    <a href="{% url 'dashboard_files' %}" class="btn btn-filter {% if not current_category %}btn-filter-active{% endif %}">全部</a>
+    <a href="{% url 'dashboard_files' %}?category=learning" class="btn btn-filter {% if current_category == 'learning' %}btn-filter-active{% endif %}">学习资料</a>
+    <a href="{% url 'dashboard_files' %}?category=project" class="btn btn-filter {% if current_category == 'project' %}btn-filter-active{% endif %}">项目代码</a>
+    <a href="{% url 'dashboard_files' %}?category=circuit" class="btn btn-filter {% if current_category == 'circuit' %}btn-filter-active{% endif %}">电路设计</a>
+    <a href="{% url 'dashboard_files' %}?category=firmware" class="btn btn-filter {% if current_category == 'firmware' %}btn-filter-active{% endif %}">固件</a>
+    <a href="{% url 'dashboard_files' %}?category=video" class="btn btn-filter {% if current_category == 'video' %}btn-filter-active{% endif %}">教学视频</a>
+    <a href="{% url 'dashboard_files' %}?category=tool" class="btn btn-filter {% if current_category == 'tool' %}btn-filter-active{% endif %}">软件工具</a>
 </div>
+
+{% if user.role == 'admin' %}
+<div style="margin-bottom:12px">
+    <a href="{% url 'dashboard_batch_delete' %}" class="btn btn-danger btn-sm">批量删除</a>
+</div>
+{% endif %}
 
 {% if files %}
-    {% if user.role == 'admin' %}
-        <div class="bulk-actions">
-            <a href="{% url 'dashboard_batch_delete' %}" class="btn btn-danger btn-sm">批量删除</a>
-        </div>
-    {% endif %}
-
-    <div class="table-responsive">
-        <table class="table" id="files-table">
-            <thead>
-                <tr>
-                    <th>文件名</th>
-                    <th>分类</th>
-                    <th>大小</th>
-                    <th>上传时间</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for f in files %}
-                    <tr id="file-row-{{ f.id }}">
-                        <td>{{ f.filename }}</td>
-                        <td><span class="tag">{{ f.get_category_display|default:f.category }}</span></td>
-                        <td>{{ f.file_size|filesizeformat }}</td>
-                        <td>{{ f.uploaded_at|date:"Y-m-d H:i" }}</td>
-                        <td class="table-actions">
-                            <a href="{{ f.file.url }}" class="btn btn-sm btn-primary" download>下载</a>
-                            <button class="btn btn-sm btn-danger"
-                                    hx-post="/api/files/{{ f.id }}/delete/"
-                                    hx-target="#file-row-{{ f.id }}"
-                                    hx-swap="outerHTML"
-                                    hx-confirm="确定删除 {{ f.filename }}？">删除</button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="table-wrap">
+<table>
+    <thead><tr><th>文件名</th><th>分类</th><th>大小</th><th>公开</th><th>时间</th><th>操作</th></tr></thead>
+    <tbody>
+        {% for f in files %}
+        <tr id="file-row-{{ f.id }}"
+            data-name="{{ f.original_name|escape }}"
+            data-category="{{ f.category }}"
+            data-desc="{{ f.description|escape }}"
+            data-public="{{ f.is_public|lower }}">
+            <td>
+                <strong>{{ f.original_name }}</strong>
+                {% if f.description %}<br><span style="font-size:.8rem;color:var(--gray-400)">{{ f.description }}</span>{% endif %}
+            </td>
+            <td><span class="tag tag-{{ f.category }}">{{ f.get_category_display }}</span></td>
+            <td style="font-size:.85rem;color:var(--gray-400)">{{ f.file_size|filesizeformat }}</td>
+            <td>{% if f.is_public %}🌐{% else %}🔒{% endif %}</td>
+            <td style="font-size:.82rem;color:var(--gray-400)">{{ f.created_at|date:"Y-m-d H:i" }}</td>
+            <td>
+                <a href="{% url 'file_download' f.id %}" class="btn btn-sm btn-outline">下载</a>
+                <button class="btn btn-sm btn-outline" onclick="openFileEditor({{ f.id }})">编辑</button>
+                {% if user.role == 'admin' %}
+                <button class="btn btn-sm btn-danger"
+                    hx-post="{% url 'file_delete_api' f.id %}"
+                    hx-target="#file-row-{{ f.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="确定删除？">删除</button>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
 {% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">📁</div>
-        <p>暂无文件</p>
-        <a href="{% url 'dashboard_upload' %}" class="btn btn-primary">上传第一个文件</a>
-    </div>
+<div class="empty-state"><div class="empty-state-icon">📁</div><p>暂无文件</p></div>
 {% endif %}
 {% endblock %}

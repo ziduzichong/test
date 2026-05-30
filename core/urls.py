@@ -47,6 +47,7 @@ urlpatterns = [
     # ============================================================
     path('api/announcements/<int:pk>/toggle/', views_dashboard.announcement_toggle, name='announcement_toggle'),
     path('api/files/<int:pk>/delete/', views_dashboard.file_delete_api, name='file_delete_api'),
+    path('api/files/<int:pk>/edit/', views_dashboard.file_edit_api, name='file_edit_api'),
     path('api/announcements/<int:pk>/delete/', views_dashboard.announcement_delete_api, name='announcement_delete_api'),
     path('api/upload-image/', views_dashboard.upload_image, name='upload_image'),
 ]
