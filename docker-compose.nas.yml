@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    volumes:
+      - /mnt/nas/esta/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: esta
+      POSTGRES_USER: esta
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+  app:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - /mnt/nas/esta/uploads:/app/media/uploads
+      - /mnt/nas/esta/static:/app/staticfiles
+    environment:
+      DATABASE_URL: postgres://esta:${DB_PASSWORD}@db:5432/esta
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "False"
+      ALLOWED_HOSTS: ${DOMAIN},localhost
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application -w 8 --threads 2 --worker-class gthread -b 0.0.0.0:8000"
+
+  caddy:
+    image: caddy:2
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - /mnt/nas/esta/uploads:/protected:ro

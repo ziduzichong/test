@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}上传文件 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>上传文件</h1>
+</div>
+
+{% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="upload-card" x-data="{
+    selectedFile: null,
+    isExecutable: false,
+    uploadProgress: 0,
+    uploading: false,
+    checkExecutable(filename) {
+        const exts = ['.exe', '.msi', '.apk', '.deb', '.rpm'];
+        return exts.some(ext => filename.toLowerCase().endsWith(ext));
+    },
+    handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            this.selectedFile = file;
+            this.isExecutable = this.checkExecutable(file.name);
+        }
+    },
+    submitForm() {
+        this.uploading = true;
+        this.uploadProgress = 0;
+        const interval = setInterval(() => {
+            if (this.uploadProgress < 90) {
+                this.uploadProgress += 10;
+            }
+        }, 300);
+        document.getElementById('upload-form').requestSubmit();
+        setTimeout(() => clearInterval(interval), 3000);
+    }
+}">
+    <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'dashboard_upload' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="category">分类</label>
+            <select id="category" name="category" class="form-control" required>
+                <option value="">请选择分类</option>
+                {% for c in categories %}
+                    <option value="{{ c.0 }}">{{ c.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="description">描述</label>
+            <input type="text" id="description" name="description" class="form-control" placeholder="文件描述（可选）">
+        </div>
+
+        <div class="form-group">
+            <label>选择文件</label>
+            <div class="upload-dropzone"
+                 @click="$refs.fileInput.click()"
+                 @dragover.prevent="$el.classList.add('dragover')"
+                 @dragleave.prevent="$el.classList.remove('dragover')"
+                 @drop.prevent="
+                    $el.classList.remove('dragover');
+                    const files = $event.dataTransfer.files;
+                    if (files.length) {
+                        $refs.fileInput.files = files;
+                        handleFileSelect({ target: { files: [files[0]] } });
+                    }
+                 ">
+                <template x-if="!selectedFile">
+                    <div class="dropzone-placeholder">
+                        <div class="dropzone-icon">📤</div>
+                        <p>点击或拖拽文件到此处</p>
+                    </div>
+                </template>
+                <template x-if="selectedFile">
+                    <div class="dropzone-file">
+                        <p x-text="selectedFile.name"></p>
+                        <p class="dropzone-size" x-text="(selectedFile.size / 1024).toFixed(1) + ' KB'"></p>
+                    </div>
+                </template>
+            </div>
+            <input type="file" id="file" name="file" x-ref="fileInput" @change="handleFileSelect" hidden required>
+        </div>
+
+        <!-- SHA256 for executables -->
+        <div class="form-group" x-show="isExecutable" x-transition>
+            <label for="sha256">SHA256 校验值</label>
+            <input type="text" id="sha256" name="sha256" class="form-control" placeholder="输入文件 SHA256 哈希值">
+        </div>
+
+        <!-- Upload Progress -->
+        <div class="upload-progress" x-show="uploading" x-transition>
+            <div class="progress-bar">
+                <div class="progress-fill" :style="'width: ' + uploadProgress + '%'"></div>
+            </div>
+            <p class="progress-text" x-text="'上传中 ' + uploadProgress + '%'"></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" :disabled="uploading">提交上传</button>
+    </form>
+</div>
+{% endblock %}

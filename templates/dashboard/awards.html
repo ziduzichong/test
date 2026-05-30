@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}奖项管理 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-between">
+    <h1>奖项管理</h1>
+    <button class="btn btn-primary" @click="$dispatch('open-modal', 'award-modal')"
+            x-data
+            onclick="document.getElementById('award-modal').__x.$data.editMode = false; document.getElementById('award-modal').__x.$data.show = true;">添加奖项</button>
+</div>
+
+{% if awards %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>奖项名</th>
+                    <th>竞赛</th>
+                    <th>等级</th>
+                    <th>日期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in awards %}
+                    <tr id="award-row-{{ a.id }}">
+                        <td>{{ a.name }}</td>
+                        <td>{{ a.competition }}</td>
+                        <td><span class="tag tag-{{ a.rank|default:'gold' }}">{{ a.get_rank_display|default:a.rank }}</span></td>
+                        <td>{{ a.date|date:"Y-m-d" }}</td>
+                        <td class="table-actions">
+                            <button class="btn btn-sm btn-outline"
+                                    @click="
+                                        editMode = true;
+                                        formId = {{ a.id }};
+                                        formName = '{{ a.name|escapejs }}';
+                                        formCompetition = '{{ a.competition|escapejs }}';
+                                        formLevel = '{{ a.rank|default:'gold' }}';
+                                        formDate = '{{ a.date|date:'Y-m-d' }}';
+                                        formMembers = [];
+                                        show = true;
+                                    "
+                                    x-data="{ editMode: false, formId: 0, formName: '', formCompetition: '', formLevel: 'gold', formDate: '', formMembers: [], show: false }">编辑</button>
+                            <button class="btn btn-sm btn-danger"
+                                    hx-post="/api/awards/{{ a.id }}/delete/"
+                                    hx-target="#award-row-{{ a.id }}"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="确定删除 {{ a.name }}？">删除</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🏆</div>
+        <p>暂无奖项</p>
+    </div>
+{% endif %}
+
+<!-- Award Modal -->
+<div class="modal-overlay" x-data="{
+    show: false,
+    editMode: false,
+    formId: 0,
+    formName: '',
+    formCompetition: '',
+    formLevel: 'gold',
+    formDate: '',
+    formMembers: [],
+    save() {
+        const url = this.editMode ? '/api/awards/' + this.formId + '/edit/' : '/api/awards/create/';
+        const formData = new FormData();
+        formData.append('name', this.formName);
+        formData.append('competition', this.formCompetition);
+        formData.append('level', this.formLevel);
+        formData.append('date', this.formDate);
+        this.formMembers.forEach(id => formData.append('members', id));
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        fetch(url, { method: 'POST', body: formData }).then(() => location.reload());
+    }
+}" x-show="show" x-transition style="display: none;">
+    <div class="modal" @click.stop>
+        <div class="modal-header">
+            <h2 x-text="editMode ? '编辑奖项' : '添加奖项'"></h2>
+            <button class="modal-close" @click="show = false">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="award-name">奖项名</label>
+                <input type="text" id="award-name" class="form-control" x-model="formName" required>
+            </div>
+            <div class="form-group">
+                <label for="award-competition">竞赛名称</label>
+                <input type="text" id="award-competition" class="form-control" x-model="formCompetition">
+            </div>
+            <div class="form-group">
+                <label for="award-level">等级</label>
+                <select id="award-level" class="form-control" x-model="formLevel">
+                    <option value="gold">金奖/一等奖</option>
+                    <option value="silver">银奖/二等奖</option>
+                    <option value="bronze">铜奖/三等奖</option>
+                    <option value="excellence">优胜奖</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="award-date">获奖日期</label>
+                <input type="date" id="award-date" class="form-control" x-model="formDate">
+            </div>
+            <div class="form-group">
+                <label>获奖成员</label>
+                <div class="checkbox-list">
+                    {% for m in members %}
+                        <label class="checkbox-item">
+                            <input type="checkbox" value="{{ m.id }}" x-model="formMembers">
+                            {{ m.name }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" @click="show = false">取消</button>
+            <button class="btn btn-primary" @click="save">保存</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

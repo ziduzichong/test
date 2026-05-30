@@ -23,7 +23,7 @@ const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  secret: 'esta-website-secret-key-2026',
+  secret: process.env.SESSION_SECRET || 'esta-website-secret-key-2026',
   resave: false,
   saveUninitialized: false,
   cookie: { httpOnly: true, maxAge: 1000 * 60 * 60 * 12, sameSite: 'lax' }
@@ -70,7 +70,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const timestamp = Date.now();
-    const safeName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const safeName = file.originalname.replace(/[/\\:*?"<>|]/g, '_');
     cb(null, `${timestamp}-${safeName}`);
   }
 });
@@ -78,6 +78,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 },
+  defParamCharset: 'utf-8',
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     if (ALLOWED_EXTENSIONS.includes(ext) || ALLOWED_MIMES.includes(file.mimetype)) {
@@ -134,6 +135,16 @@ app.get('/api/auth/session', async (req, res) => {
 });
 
 // === 公告 API ===
+app.get('/api/announcements/:id', async (req, res) => {
+  try {
+    const ann = await queryOne("SELECT * FROM announcements WHERE id=?", [req.params.id]);
+    if (!ann) return res.status(404).json({ ok: false, error: '公告不存在' });
+    res.json({ ok: true, data: ann });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 app.get('/api/announcements', async (req, res) => {
   try {
     const { category, page = 1, limit = 50 } = req.query;
@@ -323,11 +334,9 @@ app.use((err, req, res, next) => {
 });
 
 // === 启动 ===
-(async () => {
-  await initTables();
-  await seedData();
-  app.listen(PORT, () => {
-    console.log(`[ESTA] 服务器已启动: http://localhost:${PORT}`);
-    console.log(`[ESTA] 默认管理员: admin / admin123`);
-  });
-})();
+initTables();
+seedData();
+app.listen(PORT, () => {
+  console.log(`[ESTA] 服务器已启动: http://localhost:${PORT}`);
+  console.log(`[ESTA] 默认管理员: admin / admin123`);
+});

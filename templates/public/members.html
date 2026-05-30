@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}成员列表 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>协会成员</h1>
+</div>
+
+{% if members %}
+    <div class="card-grid card-grid-3">
+        {% for m in members %}
+            <a href="/members/{{ m.id }}/" class="card card-hover card-member">
+                <div class="member-avatar member-avatar-lg">{{ m.name|first }}</div>
+                <h3 class="member-name">{{ m.name }}</h3>
+                <p class="member-position">{{ m.position|default:"成员" }}</p>
+                {% if m.bio %}
+                    <p class="card-text">{{ m.bio|truncatechars:80 }}</p>
+                {% endif %}
+                {% if m.skills %}
+                    <div class="skill-tags">
+                        {% for skill in m.skills|slice:":4" %}
+                            <span class="tag tag-skill">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if m.contact_public and m.contact %}
+                    <p class="member-contact">{{ m.contact }}</p>
+                {% endif %}
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <p>暂无成员信息</p>
+    </div>
+{% endif %}
+{% endblock %}

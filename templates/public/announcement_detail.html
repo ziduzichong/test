@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ announcement.title }} — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<article class="detail-article">
+    <a href="{% url 'announcement_list' %}" class="btn btn-outline btn-sm mb-3">&larr; 返回公告列表</a>
+
+    <h1>{{ announcement.title }}</h1>
+
+    <div class="detail-meta">
+        <span class="tag tag-{{ announcement.category|default:'news' }}">{{ announcement.get_category_display|default:announcement.category }}</span>
+        <span class="meta-item">发布时间：{{ announcement.created_at|date:"Y-m-d H:i" }}</span>
+        {% if announcement.updated_at and announcement.updated_at != announcement.created_at %}
+            <span class="meta-item">更新于：{{ announcement.updated_at|date:"Y-m-d H:i" }}</span>
+        {% endif %}
+    </div>
+
+    <div class="detail-content rich-text">
+        {{ announcement.content|safe }}
+    </div>
+</article>
+{% endblock %}

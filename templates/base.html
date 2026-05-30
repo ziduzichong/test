@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}电子科学与技术协会{% endblock %}</title>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- CKEditor / Quill -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" x-data="{ mobileOpen: false }">
+        <div class="container navbar-inner">
+            <a href="{% url 'home' %}" class="navbar-brand">⚡ 电子科学与技术协会</a>
+            <button class="navbar-toggler" @click="mobileOpen = !mobileOpen" aria-label="切换菜单">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <div class="navbar-collapse" :class="{ 'show': mobileOpen }">
+                <ul class="navbar-nav">
+                    <li><a href="{% url 'home' %}" class="nav-link">首页</a></li>
+                    <li><a href="{% url 'announcement_list' %}" class="nav-link">公告</a></li>
+                    <li><a href="{% url 'member_list' %}" class="nav-link">成员</a></li>
+                    <li><a href="{% url 'award_list' %}" class="nav-link">奖项</a></li>
+                </ul>
+                <ul class="navbar-nav navbar-right">
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'dashboard' %}" class="nav-link">管理面板</a></li>
+                        <li><a href="{% url 'logout' %}" class="nav-link">退出</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}" class="nav-link">登录</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" class="container main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 电子科学与技术协会</p>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div id="toast-container" x-data="{ toasts: [] }" x-init="
+        {% if messages %}
+            {% for message in messages %}
+                setTimeout(() => { toasts.push({ id: Date.now(), text: '{{ message|escapejs }}', type: '{{ message.tags|default:"info" }}' }); }, {{ forloop.counter0 }}00);
+            {% endfor %}
+        {% endif %}
+    ">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div class="toast" :class="'toast-' + toast.type" x-show="toast.visible !== false"
+                 x-init="setTimeout(() => { toast.visible = false; setTimeout(() => toasts.splice(toasts.indexOf(toast), 1), 300); }, 4000)">
+                <span x-text="toast.text"></span>
+                <button class="toast-close" @click="toast.visible = false">&times;</button>
+            </div>
+        </template>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -215,8 +215,8 @@ const App = {
   /* -------- 公告详情 -------- */
   async renderAnnouncementDetail(main, id) {
     try {
-      const data = await App.api.get('/announcements?limit=100');
-      const ann = (data.data.announcements || []).find(a => a.id == id);
+      const data = await App.api.get(`/announcements/${id}`);
+      const ann = data.data;
       if (!ann) { main.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><p>公告未找到</p></div>'; return; }
       const sanitized = DOMPurify.sanitize(ann.content);
       main.innerHTML = `
@@ -398,8 +398,8 @@ const App = {
   async openAnnEditor(id) {
     let ann = null;
     if (id) {
-      const data = await App.api.get('/announcements?limit=100');
-      ann = (data.data.announcements || []).find(a => a.id == id);
+      const data = await App.api.get(`/announcements/${id}`);
+      ann = data.data;
     }
     App.openModal(`
       <div class="modal-header">
@@ -517,6 +517,10 @@ const App = {
         <input class="form-input" id="memPosition" value="${mem ? App.esc(mem.position) : ''}" placeholder="如：会长、技术部长">
       </div>
       <div class="form-group">
+        <label class="form-label">头像链接（可选）</label>
+        <input class="form-input" id="memAvatar" value="${mem ? App.esc(mem.avatar_url) : ''}" placeholder="头像图片URL">
+      </div>
+      <div class="form-group">
         <label class="form-label">简介</label>
         <textarea class="form-textarea" id="memBio" placeholder="个人简介">${mem ? App.esc(mem.bio) : ''}</textarea>
       </div>
@@ -542,6 +546,7 @@ const App = {
         if (!name) { App.toast('请输入姓名', 'error'); return; }
         const body = {
           name, position: document.getElementById('memPosition')?.value || '',
+          avatar_url: document.getElementById('memAvatar')?.value || '',
           bio: document.getElementById('memBio')?.value || '',
           contact: document.getElementById('memContact')?.value || '',
           skills: document.getElementById('memSkills')?.value || '',

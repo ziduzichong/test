@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}文件管理 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-between">
+    <h1>文件管理</h1>
+    <a href="{% url 'dashboard_upload' %}" class="btn btn-primary">上传文件</a>
+</div>
+
+<!-- Category Filter -->
+<div class="filter-bar">
+    <a href="{% url 'dashboard_files' %}" class="btn btn-filter {% if not category %}btn-filter-active{% endif %}">全部</a>
+    <a href="{% url 'dashboard_files' %}?category=document" class="btn btn-filter {% if category == 'document' %}btn-filter-active{% endif %}">文档</a>
+    <a href="{% url 'dashboard_files' %}?category=software" class="btn btn-filter {% if category == 'software' %}btn-filter-active{% endif %}">软件</a>
+    <a href="{% url 'dashboard_files' %}?category=image" class="btn btn-filter {% if category == 'image' %}btn-filter-active{% endif %}">图片</a>
+    <a href="{% url 'dashboard_files' %}?category=other" class="btn btn-filter {% if category == 'other' %}btn-filter-active{% endif %}">其他</a>
+</div>
+
+{% if files %}
+    {% if user.role == 'admin' %}
+        <div class="bulk-actions">
+            <a href="{% url 'dashboard_batch_delete' %}" class="btn btn-danger btn-sm">批量删除</a>
+        </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        <table class="table" id="files-table">
+            <thead>
+                <tr>
+                    <th>文件名</th>
+                    <th>分类</th>
+                    <th>大小</th>
+                    <th>上传时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in files %}
+                    <tr id="file-row-{{ f.id }}">
+                        <td>{{ f.filename }}</td>
+                        <td><span class="tag">{{ f.get_category_display|default:f.category }}</span></td>
+                        <td>{{ f.file_size|filesizeformat }}</td>
+                        <td>{{ f.uploaded_at|date:"Y-m-d H:i" }}</td>
+                        <td class="table-actions">
+                            <a href="{{ f.file.url }}" class="btn btn-sm btn-primary" download>下载</a>
+                            <button class="btn btn-sm btn-danger"
+                                    hx-post="/api/files/{{ f.id }}/delete/"
+                                    hx-target="#file-row-{{ f.id }}"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="确定删除 {{ f.filename }}？">删除</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📁</div>
+        <p>暂无文件</p>
+        <a href="{% url 'dashboard_upload' %}" class="btn btn-primary">上传第一个文件</a>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}管理面板 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>管理面板</h1>
+</div>
+
+<div class="card-grid card-grid-4">
+    <div class="card card-stat">
+        <div class="stat-icon stat-icon-blue">📄</div>
+        <div class="stat-number">{{ file_count|default:0 }}</div>
+        <div class="stat-label">文件总数</div>
+    </div>
+    <div class="card card-stat">
+        <div class="stat-icon stat-icon-green">📢</div>
+        <div class="stat-number">{{ announcement_count|default:0 }}</div>
+        <div class="stat-label">公告总数</div>
+    </div>
+    <div class="card card-stat">
+        <div class="stat-icon stat-icon-purple">👥</div>
+        <div class="stat-number">{{ member_count|default:0 }}</div>
+        <div class="stat-label">成员总数</div>
+    </div>
+    <div class="card card-stat">
+        <div class="stat-icon stat-icon-orange">📥</div>
+        <div class="stat-number">{{ total_downloads|default:0 }}</div>
+        <div class="stat-label">总下载量</div>
+    </div>
+</div>
+
+<div class="dashboard-links">
+    <a href="{% url 'dashboard_files' %}" class="btn btn-outline">文件管理</a>
+    <a href="{% url 'dashboard_announcements' %}" class="btn btn-outline">公告管理</a>
+    <a href="{% url 'dashboard_members' %}" class="btn btn-outline">成员管理</a>
+    <a href="{% url 'dashboard_awards' %}" class="btn btn-outline">奖项管理</a>
+    {% if user.role == 'admin' %}
+        <a href="{% url 'dashboard_accounts' %}" class="btn btn-outline">账号管理</a>
+    {% endif %}
+</div>
+{% endblock %}

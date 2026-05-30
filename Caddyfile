@@ -1,0 +1,23 @@
+{$DOMAIN:localhost} {
+    handle /protected/* {
+        internal
+    }
+    handle /static/* {
+        root * /app/staticfiles
+        file_server
+        header Cache-Control "public, max-age=31536000, immutable"
+    }
+    handle /media/* {
+        root * /app
+        file_server
+    }
+    handle {
+        reverse_proxy app:8000
+    }
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+}

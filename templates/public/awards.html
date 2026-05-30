@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}获奖记录 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>获奖记录</h1>
+</div>
+
+{% if awards %}
+    <div class="card-grid card-grid-2">
+        {% for a in awards %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="award-header">
+                        <span class="tag tag-{{ a.rank|default:'gold' }}">{{ a.get_rank_display|default:a.rank }}</span>
+                        <span class="card-date">{{ a.date|date:"Y-m-d" }}</span>
+                    </div>
+                    <h3 class="card-title">{{ a.name }}</h3>
+                    <p class="card-text">{{ a.competition }}</p>
+                    {% if a.members.all %}
+                        <div class="award-members">
+                            <span class="meta-label">获奖成员：</span>
+                            {% for m in a.members.all %}
+                                <span class="tag tag-member">{{ m.name }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if a.certificate_image %}
+                        <div class="award-certificate">
+                            <img src="{{ a.certificate_image.url }}" alt="{{ a.name }} 证书" class="certificate-img">
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🏆</div>
+        <p>暂无获奖记录</p>
+    </div>
+{% endif %}
+{% endblock %}

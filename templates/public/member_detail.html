@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ member.name }} — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<article class="detail-article">
+    <a href="{% url 'member_list' %}" class="btn btn-outline btn-sm mb-3">&larr; 返回成员列表</a>
+
+    <div class="member-profile">
+        <div class="member-avatar member-avatar-xl">{{ member.name|first }}</div>
+        <div class="member-info">
+            <h1>{{ member.name }}</h1>
+            <p class="member-position">{{ member.position|default:"成员" }}</p>
+        </div>
+    </div>
+
+    {% if member.bio %}
+        <div class="detail-section">
+            <h3>简介</h3>
+            <p>{{ member.bio }}</p>
+        </div>
+    {% endif %}
+
+    {% if member.skills %}
+        <div class="detail-section">
+            <h3>技能</h3>
+            <div class="skill-tags">
+                {% for skill in member.skills %}
+                    <span class="tag tag-skill">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if member.contact_public or user.is_authenticated %}
+        {% if member.contact %}
+            <div class="detail-section">
+                <h3>联系方式</h3>
+                <p>{{ member.contact }}</p>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="detail-section">
+        <p class="meta-item">加入时间：{{ member.joined_at|date:"Y-m-d" }}</p>
+    </div>
+</article>
+{% endblock %}

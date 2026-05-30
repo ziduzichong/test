@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}首页 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">⚡ 电子科学与技术协会</h1>
+        <p class="hero-subtitle">致力于电子技术学习与交流</p>
+        <div class="hero-actions">
+            <a href="{% url 'announcement_list' %}" class="btn btn-primary btn-lg">查看公告</a>
+            <a href="{% url 'member_list' %}" class="btn btn-outline-light btn-lg">认识成员</a>
+        </div>
+    </div>
+</section>
+
+<!-- Latest Announcements -->
+<section class="section">
+    <div class="section-header">
+        <h2>最新公告</h2>
+        <a href="{% url 'announcement_list' %}" class="btn btn-link">查看全部 &rarr;</a>
+    </div>
+    {% if announcements %}
+        <div class="card-grid card-grid-4">
+            {% for a in announcements|slice:":4" %}
+                <a href="/announcements/{{ a.id }}/" class="card card-hover">
+                    <div class="card-body">
+                        <span class="tag tag-{{ a.category|default:'news' }}">{{ a.get_category_display|default:a.category }}</span>
+                        <h3 class="card-title">{{ a.title }}</h3>
+                        <p class="card-date">{{ a.created_at|date:"Y-m-d" }}</p>
+                        <p class="card-text">{{ a.content|striptags|truncatechars:120 }}</p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <p>暂无公告</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Member Showcase -->
+<section class="section section-alt">
+    <div class="section-header">
+        <h2>协会成员</h2>
+        <a href="{% url 'member_list' %}" class="btn btn-link">查看全部 &rarr;</a>
+    </div>
+    {% if members %}
+        <div class="card-grid card-grid-3">
+            {% for m in members|slice:":6" %}
+                <a href="/members/{{ m.id }}/" class="card card-hover card-member">
+                    <div class="member-avatar">{{ m.name|first }}</div>
+                    <h3 class="member-name">{{ m.name }}</h3>
+                    <p class="member-position">{{ m.position|default:"成员" }}</p>
+                    {% if m.skills %}
+                        <div class="skill-tags">
+                            {% for skill in m.skills|slice:":3" %}
+                                <span class="tag tag-skill">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <p>暂无成员信息</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- Recent Awards -->
+<section class="section">
+    <div class="section-header">
+        <h2>最近获奖</h2>
+        <a href="{% url 'award_list' %}" class="btn btn-link">查看全部 &rarr;</a>
+    </div>
+    {% if awards %}
+        <div class="card-grid card-grid-3">
+            {% for a in awards|slice:":3" %}
+                <div class="card">
+                    <div class="card-body">
+                        <span class="tag tag-{{ a.rank|default:'gold' }}">{{ a.get_rank_display|default:a.rank }}</span>
+                        <h3 class="card-title">{{ a.name }}</h3>
+                        <p class="card-text">{{ a.competition }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🏆</div>
+            <p>暂无获奖记录</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

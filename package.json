@@ -1,6 +1,6 @@
 {
   "name": "esta-website",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "电子科学与技术协会网站 - 对外展示与内部资源共享平台",
   "main": "server.js",
   "scripts": {
@@ -8,12 +8,14 @@
     "dev": "node --watch server.js"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.4.1",
     "express-session": "^1.19.0",
-    "multer": "^2.1.1",
-    "sql.js": "^1.14.1"
+    "multer": "^2.1.1"
   }
 }

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}公告管理 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-between">
+    <h1>公告管理</h1>
+    <button class="btn btn-primary" @click="$dispatch('open-modal', 'announcement-modal')"
+            x-data x-init="$el._id = 'new'"
+            onclick="document.getElementById('announcement-modal').__x.$data.editMode = false; document.getElementById('announcement-modal').__x.$data.formTitle = ''; document.getElementById('announcement-modal').__x.$data.formCategory = 'news'; document.getElementById('announcement-modal').__x.$data.formContent = ''; document.getElementById('announcement-modal').__x.$data.show = true;">新建公告</button>
+</div>
+
+{% if announcements %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>分类</th>
+                    <th>状态</th>
+                    <th>时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in announcements %}
+                    <tr id="announcement-row-{{ a.id }}">
+                        <td>{{ a.title }}</td>
+                        <td><span class="tag tag-{{ a.category|default:'news' }}">{{ a.get_category_display|default:a.category }}</span></td>
+                        <td>
+                            {% if a.is_published %}
+                                <span class="status status-published">已发布</span>
+                            {% else %}
+                                <span class="status status-draft">草稿</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ a.created_at|date:"Y-m-d H:i" }}</td>
+                        <td class="table-actions">
+                            <button class="btn btn-sm btn-outline"
+                                    @click="
+                                        editMode = true;
+                                        formId = {{ a.id }};
+                                        formTitle = '{{ a.title|escapejs }}';
+                                        formCategory = '{{ a.category|default:'news' }}';
+                                        formContent = `{{ a.content|escapejs }}`;
+                                        show = true;
+                                    "
+                                    x-data="{ editMode: false, formId: 0, formTitle: '', formCategory: 'news', formContent: '', show: false }"
+                                    x-init="$el.__x = $data">编辑</button>
+                            <button class="btn btn-sm btn-outline"
+                                    hx-post="/api/announcements/{{ a.id }}/toggle-publish/"
+                                    hx-target="#announcement-row-{{ a.id }}"
+                                    hx-swap="outerHTML">
+                                {% if a.is_published %}下架{% else %}发布{% endif %}
+                            </button>
+                            <button class="btn btn-sm btn-danger"
+                                    hx-post="/api/announcements/{{ a.id }}/delete/"
+                                    hx-target="#announcement-row-{{ a.id }}"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="确定删除「{{ a.title }}」？">删除</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📢</div>
+        <p>暂无公告</p>
+    </div>
+{% endif %}
+
+<!-- Announcement Modal -->
+<div class="modal-overlay" x-data="{
+    show: false,
+    editMode: false,
+    formId: 0,
+    formTitle: '',
+    formCategory: 'news',
+    formContent: '',
+    quill: null,
+    initQuill() {
+        if (this.quill) return;
+        this.$nextTick(() => {
+            const editor = document.getElementById('announcement-editor');
+            if (!editor) return;
+            this.quill = new Quill(editor, { theme: 'snow' });
+            if (this.formContent) {
+                this.quill.root.innerHTML = this.formContent;
+            }
+            this.quill.on('text-change', () => {
+                this.formContent = this.quill.root.innerHTML;
+            });
+        });
+    },
+    save() {
+        const url = this.editMode ? '/api/announcements/' + this.formId + '/edit/' : '/api/announcements/create/';
+        const formData = new FormData();
+        formData.append('title', this.formTitle);
+        formData.append('category', this.formCategory);
+        formData.append('content', this.formContent);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        fetch(url, { method: 'POST', body: formData }).then(() => location.reload());
+    }
+}" x-show="show" x-transition style="display: none;">
+    <div class="modal" @click.stop>
+        <div class="modal-header">
+            <h2 x-text="editMode ? '编辑公告' : '新建公告'"></h2>
+            <button class="modal-close" @click="show = false">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="announcement-title">标题</label>
+                <input type="text" id="announcement-title" class="form-control" x-model="formTitle" placeholder="公告标题">
+            </div>
+            <div class="form-group">
+                <label for="announcement-category">分类</label>
+                <select id="announcement-category" class="form-control" x-model="formCategory">
+                    <option value="news">新闻</option>
+                    <option value="course">课程</option>
+                    <option value="exam">考核</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>内容</label>
+                <div id="announcement-editor" style="height: 300px;"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" @click="show = false">取消</button>
+            <button class="btn btn-primary" @click="save">保存</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.effect(() => {
+        const el = document.getElementById('announcement-modal');
+        if (el && el.__x && el.__x.$data.show) {
+            setTimeout(() => {
+                if (el.__x.$data.quill === null) {
+                    el.__x.initQuill();
+                }
+            }, 100);
+        }
+    });
+});
+</script>
+{% endblock %}

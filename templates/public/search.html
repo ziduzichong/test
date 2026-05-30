@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}搜索 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>搜索</h1>
+</div>
+
+<form class="search-form" method="get" action="{% url 'home' %}search/">
+    <div class="search-input-group">
+        <input type="text" name="q" class="search-input" placeholder="搜索公告、文件..." value="{{ query|default:'' }}">
+        <button type="submit" class="btn btn-primary">搜索</button>
+    </div>
+</form>
+
+{% if query %}
+    {% if announcements or files %}
+        {% if announcements %}
+            <section class="section">
+                <h2>公告结果</h2>
+                <div class="card-grid card-grid-2">
+                    {% for a in announcements %}
+                        <a href="/announcements/{{ a.id }}/" class="card card-hover">
+                            <div class="card-body">
+                                <span class="tag tag-{{ a.category|default:'news' }}">{{ a.get_category_display|default:a.category }}</span>
+                                <h3 class="card-title">{{ a.title }}</h3>
+                                <p class="card-date">{{ a.created_at|date:"Y-m-d" }}</p>
+                                <p class="card-text">{{ a.content|striptags|truncatechars:120 }}</p>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if files %}
+            <section class="section">
+                <h2>文件结果</h2>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>文件名</th>
+                                <th>分类</th>
+                                <th>大小</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in files %}
+                                <tr>
+                                    <td>{{ f.filename }}</td>
+                                    <td><span class="tag">{{ f.get_category_display|default:f.category }}</span></td>
+                                    <td>{{ f.file_size|filesizeformat }}</td>
+                                    <td><a href="{{ f.file.url }}" class="btn btn-sm btn-primary" download>下载</a></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <h3>未找到相关内容</h3>
+            <p>没有与"<strong>{{ query }}</strong>"相关的结果，请尝试其他关键词。</p>
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

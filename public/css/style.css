@@ -140,6 +140,9 @@ img { max-width: 100%; height: auto; }
 .category-news { background: var(--primary-light); color: var(--primary); }
 .category-course { background: #fef3c7; color: #92400e; }
 .category-exam { background: #fce4ec; color: #c62828; }
+.category-learning { background: #e0f2fe; color: #0369a1; }
+.category-project { background: #ede9fe; color: #6b21a8; }
+.category-tool { background: #f0fdf4; color: #15803d; }
 
 /* Member Card */
 .member-card { text-align: center; padding: 24px 16px; }

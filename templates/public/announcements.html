@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}公告列表 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>公告列表</h1>
+</div>
+
+<!-- Category Filter -->
+<div class="filter-bar">
+    <a href="{% url 'announcement_list' %}" class="btn btn-filter {% if not category %}btn-filter-active{% endif %}">全部</a>
+    <a href="{% url 'announcement_list' %}?category=news" class="btn btn-filter {% if category == 'news' %}btn-filter-active{% endif %}">新闻</a>
+    <a href="{% url 'announcement_list' %}?category=course" class="btn btn-filter {% if category == 'course' %}btn-filter-active{% endif %}">课程</a>
+    <a href="{% url 'announcement_list' %}?category=exam" class="btn btn-filter {% if category == 'exam' %}btn-filter-active{% endif %}">考核</a>
+</div>
+
+{% if announcements %}
+    <div class="card-grid card-grid-2">
+        {% for a in announcements %}
+            <a href="/announcements/{{ a.id }}/" class="card card-hover">
+                <div class="card-body">
+                    <span class="tag tag-{{ a.category|default:'news' }}">{{ a.get_category_display|default:a.category }}</span>
+                    <h3 class="card-title">{{ a.title }}</h3>
+                    <p class="card-date">{{ a.created_at|date:"Y-m-d H:i" }}</p>
+                    <p class="card-text">{{ a.content|striptags|truncatechars:150 }}</p>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if announcements.paginator.num_pages > 1 %}
+        <nav class="pagination-nav">
+            <span class="pagination-info">第 {{ announcements.number }} / {{ announcements.paginator.num_pages }} 页</span>
+            <div class="pagination-links">
+                {% if announcements.has_previous %}
+                    <a href="?page={{ announcements.previous_page_number }}{% if category %}&category={{ category }}{% endif %}" class="btn btn-outline">&laquo; 上一页</a>
+                {% endif %}
+                {% if announcements.has_next %}
+                    <a href="?page={{ announcements.next_page_number }}{% if category %}&category={{ category }}{% endif %}" class="btn btn-outline">下一页 &raquo;</a>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <p>暂无公告</p>
+    </div>
+{% endif %}
+{% endblock %}

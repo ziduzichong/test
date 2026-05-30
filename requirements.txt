@@ -1,0 +1,32 @@
+# 核心
+Django>=5.0,<5.1
+gunicorn>=22.0
+whitenoise>=6.7
+
+# 数据库
+psycopg2-binary>=2.9; sys_platform != 'win32'
+# Windows 用 psycopg 替代，或上 NAS 后安装
+
+# 富文本
+django-ckeditor-5>=0.2
+
+# 文件处理
+Pillow>=11.0
+python-magic>=0.4.27
+django-chunked-upload>=2.0
+
+# 安全
+django-axes>=7.0
+bcrypt>=4.0
+
+# 环境变量
+python-dotenv>=1.0
+dj-database-url>=2.2
+
+# 生产
+gunicorn>=22.0
+
+# 开发工具
+black>=24.0
+isort>=5.13
+pytest-django>=4.8

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}批量删除文件 — 电子科学与技术协会{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>批量删除文件</h1>
+</div>
+
+{% if files %}
+    <form method="post" action="/api/files/batch-delete/" x-data="{
+        selectAll: false,
+        selectedIds: [],
+        toggleAll() {
+            this.selectAll = !this.selectAll;
+            const checkboxes = document.querySelectorAll('.file-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = this.selectAll;
+                if (this.selectAll) {
+                    if (!this.selectedIds.includes(cb.value)) {
+                        this.selectedIds.push(cb.value);
+                    }
+                } else {
+                    this.selectedIds = [];
+                }
+            });
+        },
+        toggleFile(id) {
+            const idx = this.selectedIds.indexOf(id);
+            if (idx > -1) {
+                this.selectedIds.splice(idx, 1);
+            } else {
+                this.selectedIds.push(id);
+            }
+        },
+        confirmDelete() {
+            if (this.selectedIds.length === 0) {
+                alert('请至少选择一个文件');
+                return false;
+            }
+            return confirm('确定要删除选中的 ' + this.selectedIds.length + ' 个文件吗？此操作不可撤销。');
+        }
+    }">
+        {% csrf_token %}
+
+        <div class="batch-select-all">
+            <label class="checkbox-item">
+                <input type="checkbox" @click="toggleAll()" :checked="selectAll">
+                <strong>全选/取消全选</strong>
+            </label>
+            <span class="selected-count" x-text="'已选择 ' + selectedIds.length + ' 个文件'"></span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>文件名</th>
+                        <th>分类</th>
+                        <th>大小</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in files %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="file_ids" value="{{ f.id }}" class="file-checkbox"
+                                       @click="toggleFile('{{ f.id }}')">
+                            </td>
+                            <td>{{ f.filename }}</td>
+                            <td><span class="tag">{{ f.get_category_display|default:f.category }}</span></td>
+                            <td>{{ f.file_size|filesizeformat }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="batch-actions">
+            <button type="submit" class="btn btn-danger btn-lg"
+                    @click.prevent="if (confirmDelete()) $el.closest('form').submit()">
+                🗑 删除所选文件
+            </button>
+        </div>
+    </form>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📁</div>
+        <p>没有可删除的文件</p>
+        <a href="{% url 'dashboard_files' %}" class="btn btn-outline">返回文件管理</a>
+    </div>
+{% endif %}
+{% endblock %}
