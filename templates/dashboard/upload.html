@@ -2,85 +2,93 @@
 {% block title %}上传文件{% endblock %}
 {% block content %}
 <div class="page-header"><h1>上传文件</h1></div>
+<div class="card" style="max-width:600px;margin:0 auto;padding:24px">
+<form method="post" enctype="multipart/form-data" id="uploadForm">
+    {% csrf_token %}
 
-<div class="upload-card">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+    <div class="form-group">
+        <label>分类 <span style="color:var(--danger)">*</span></label>
+        <select name="category" class="form-control" required>
+            <option value="">请选择分类</option>
+            {% for c in categories %}
+            <option value="{{ c.0 }}">{{ c.1 }}</option>
+            {% endfor %}
+        </select>
+    </div>
 
-        <div class="form-group">
-            <label for="category">分类</label>
-            <select id="category" name="category" class="form-control" required>
-                <option value="">请选择分类</option>
-                {% for c in categories %}
-                    <option value="{{ c.0 }}">{{ c.1 }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    <div class="form-group">
+        <label>描述</label>
+        <input type="text" name="description" class="form-control" placeholder="可选">
+    </div>
 
-        <div class="form-group">
-            <label for="description">描述</label>
-            <input type="text" id="description" name="description" class="form-control" placeholder="文件描述（可选）">
-        </div>
+    <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" name="is_public" style="width:auto">
+            公开下载（访客无需登录）
+        </label>
+    </div>
 
-        <div class="form-group">
-            <label><input type="checkbox" name="is_public"> 公开下载（访客无需登录即可下载）</label>
-        </div>
-
-        <div class="form-group">
-            <label>选择文件</label>
-            <div class="upload-dropzone" id="uploadDropzone">
-                <div class="dropzone-placeholder" id="dropzonePlaceholder">
-                    <div class="dropzone-icon">📤</div>
-                    <p>点击或拖拽文件到此处</p>
-                </div>
-                <div class="dropzone-file" id="dropzoneFile" style="display:none">
-                    <p id="dropzoneFileName"></p>
-                    <p class="dropzone-size" id="dropzoneFileSize"></p>
-                </div>
+    <div class="form-group">
+        <label>文件 <span style="color:var(--danger)">*</span></label>
+        <div id="dropArea" style="border:2px dashed var(--gray-300);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:.2s">
+            <div id="dropPlaceholder">
+                <div style="font-size:2.5rem;color:var(--gray-400);margin-bottom:8px">📤</div>
+                <p style="color:var(--gray-500)">点击或拖拽文件到此处</p>
+                <p style="font-size:.8rem;color:var(--gray-400)">最大 2GB</p>
             </div>
-            <input type="file" id="fileInput" name="file" style="display:none" required>
+            <div id="dropFile" style="display:none">
+                <p style="font-weight:500" id="dropFileName"></p>
+                <p style="font-size:.85rem;color:var(--gray-400)" id="dropFileSize"></p>
+            </div>
         </div>
+        <input type="file" name="file" id="realFileInput" style="display:none">
+    </div>
 
-        <div class="form-group" id="sha256Group" style="display:none">
-            <label for="sha256">SHA256 校验值 <span style="color:var(--gray-400);font-weight:400">（可执行文件必填）</span></label>
-            <input type="text" id="sha256" name="sha256" class="form-control" placeholder="输入文件 SHA256 哈希值">
-        </div>
+    <div class="form-group" id="sha256Box" style="display:none">
+        <label>SHA256 校验值 <span style="color:var(--gray-400);font-weight:400">（可执行文件必填）</span></label>
+        <input type="text" name="sha256" class="form-control" placeholder="64位十六进制字符串">
+    </div>
 
-        <button type="submit" class="btn btn-primary btn-block">上传</button>
-    </form>
+    <button type="submit" class="btn btn-primary" style="width:100%">上传</button>
+</form>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var input = document.getElementById('fileInput');
-    var placeholder = document.getElementById('dropzonePlaceholder');
-    var fileInfo = document.getElementById('dropzoneFile');
-    var fileName = document.getElementById('dropzoneFileName');
-    var fileSize = document.getElementById('dropzoneFileSize');
-    var shaGroup = document.getElementById('sha256Group');
+(function() {
+    var dropArea = document.getElementById('dropArea');
+    var fileInput = document.getElementById('realFileInput');
+    var placeholder = document.getElementById('dropPlaceholder');
+    var fileInfo = document.getElementById('dropFile');
+    var fileName = document.getElementById('dropFileName');
+    var fileSize = document.getElementById('dropFileSize');
+    var shaBox = document.getElementById('sha256Box');
+    var exts = ['exe','msi','apk','deb','rpm'];
 
     function showFile(file) {
         placeholder.style.display = 'none';
         fileInfo.style.display = '';
         fileName.textContent = file.name;
-        fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
-        var ext = file.name.toLowerCase().split('.').pop();
-        shaGroup.style.display = (['exe','msi','apk','deb','rpm'].indexOf(ext) >= 0) ? '' : 'none';
+        fileSize.textContent = (file.size / 1048576).toFixed(1) + ' MB';
+        var ext = file.name.split('.').pop().toLowerCase();
+        shaBox.style.display = (exts.indexOf(ext) >= 0) ? '' : 'none';
     }
 
-    input.addEventListener('change', function() { if (this.files[0]) showFile(this.files[0]); });
+    dropArea.addEventListener('click', function() { fileInput.click(); });
 
-    var dz = document.getElementById('uploadDropzone');
-    dz.addEventListener('click', function() { input.click(); });
-    dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('dragover'); });
-    dz.addEventListener('dragleave', function() { dz.classList.remove('dragover'); });
-    dz.addEventListener('drop', function(e) {
-        e.preventDefault(); dz.classList.remove('dragover');
+    dropArea.addEventListener('dragover', function(e) { e.preventDefault(); dropArea.style.borderColor = 'var(--primary)'; dropArea.style.background = 'var(--primary-light)'; });
+    dropArea.addEventListener('dragleave', function() { dropArea.style.borderColor = ''; dropArea.style.background = ''; });
+    dropArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropArea.style.borderColor = ''; dropArea.style.background = '';
         if (e.dataTransfer.files.length) {
-            input.files = e.dataTransfer.files;
+            fileInput.files = e.dataTransfer.files;
             showFile(e.dataTransfer.files[0]);
         }
     });
-});
+
+    fileInput.addEventListener('change', function() {
+        if (this.files.length) showFile(this.files[0]);
+    });
+})();
 </script>
 {% endblock %}

@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========== HTMX afterSwap 重新绑定关闭事件 ==========
-document.body.addEventListener('htmx:afterSwap', function(e) {
+if (document.body) document.body.addEventListener('htmx:afterSwap', function(e) {
   e.target.querySelectorAll('.modal-close, .modal-close-btn').forEach(function(b) {
     b.addEventListener('click', closeModal);
   });
