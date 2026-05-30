@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.db.models import Sum
 from core.models import User, Announcement, Member, Award, UploadedFile
-from core.validators import validate_extension, validate_magic_bytes
+from core.validators import validate_extension
 
 
 # ============================================================
@@ -89,10 +89,9 @@ def file_upload(request):
             messages.error(request, f'文件大小超过限制（最大 {settings.FILE_UPLOAD_MAX_SIZE // 1048576} MB）')
             return render(request, 'dashboard/upload.html', context)
 
-        # 校验：扩展名 + 魔术字
+        # 校验：扩展名
         try:
             validate_extension(uploaded.name, category)
-            validate_magic_bytes(uploaded, category)
         except Exception as e:
             messages.error(request, str(e))
             return render(request, 'dashboard/upload.html', context)
