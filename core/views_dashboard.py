@@ -69,6 +69,10 @@ def file_list(request):
 @login_required
 def file_upload(request):
     """文件上传：校验扩展名 + 魔术字，可执行文件强制计算 SHA256"""
+    from core.models import UploadedFile
+    categories = UploadedFile.Category.choices
+    context = {'categories': categories}
+
     if request.method == 'POST':
         uploaded = request.FILES.get('file')
         category = request.POST.get('category', '')
@@ -78,12 +82,12 @@ def file_upload(request):
         # 校验：文件是否选择
         if not uploaded:
             messages.error(request, '请选择文件')
-            return render(request, 'dashboard/upload.html')
+            return render(request, 'dashboard/upload.html', context)
 
         # 校验：文件大小
         if uploaded.size > settings.FILE_UPLOAD_MAX_SIZE:
             messages.error(request, f'文件大小超过限制（最大 {settings.FILE_UPLOAD_MAX_SIZE // 1048576} MB）')
-            return render(request, 'dashboard/upload.html')
+            return render(request, 'dashboard/upload.html', context)
 
         # 校验：扩展名 + 魔术字
         try:
@@ -91,7 +95,7 @@ def file_upload(request):
             validate_magic_bytes(uploaded, category)
         except Exception as e:
             messages.error(request, str(e))
-            return render(request, 'dashboard/upload.html')
+            return render(request, 'dashboard/upload.html', context)
 
         # 判断是否可执行文件
         ext = os.path.splitext(uploaded.name)[1].lower()
@@ -122,7 +126,7 @@ def file_upload(request):
         messages.success(request, f'文件 "{uploaded.name}" 上传成功')
         return redirect('/dashboard/files/')
 
-    return render(request, 'dashboard/upload.html')
+    return render(request, 'dashboard/upload.html', context)
 
 
 @login_required

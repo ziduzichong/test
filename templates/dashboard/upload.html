@@ -57,6 +57,12 @@
         </div>
 
         <div class="form-group">
+            <label class="form-checkbox">
+                <input type="checkbox" name="is_public"> 公开下载（访客无需登录即可下载）
+            </label>
+        </div>
+
+        <div class="form-group">
             <label>选择文件</label>
             <div class="upload-dropzone"
                  @click="$refs.fileInput.click()"
