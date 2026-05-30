@@ -1,44 +1,10 @@
 {% extends "base.html" %}
-{% block title %}上传文件 — 电子科学与技术协会{% endblock %}
-
+{% block title %}上传文件{% endblock %}
 {% block content %}
-<div class="page-header">
-    <h1>上传文件</h1>
-</div>
+<div class="page-header"><h1>上传文件</h1></div>
 
-{% if error %}
-    <div class="alert alert-error">{{ error }}</div>
-{% endif %}
-
-<div class="upload-card" x-data="{
-    selectedFile: null,
-    isExecutable: false,
-    uploadProgress: 0,
-    uploading: false,
-    checkExecutable(filename) {
-        const exts = ['.exe', '.msi', '.apk', '.deb', '.rpm'];
-        return exts.some(ext => filename.toLowerCase().endsWith(ext));
-    },
-    handleFileSelect(e) {
-        const file = e.target.files[0];
-        if (file) {
-            this.selectedFile = file;
-            this.isExecutable = this.checkExecutable(file.name);
-        }
-    },
-    submitForm() {
-        this.uploading = true;
-        this.uploadProgress = 0;
-        const interval = setInterval(() => {
-            if (this.uploadProgress < 90) {
-                this.uploadProgress += 10;
-            }
-        }, 300);
-        document.getElementById('upload-form').requestSubmit();
-        setTimeout(() => clearInterval(interval), 3000);
-    }
-}">
-    <form id="upload-form" method="post" enctype="multipart/form-data" action="{% url 'dashboard_upload' %}">
+<div class="upload-card">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         <div class="form-group">
@@ -57,56 +23,64 @@
         </div>
 
         <div class="form-group">
-            <label class="form-checkbox">
-                <input type="checkbox" name="is_public"> 公开下载（访客无需登录即可下载）
-            </label>
+            <label><input type="checkbox" name="is_public"> 公开下载（访客无需登录即可下载）</label>
         </div>
 
         <div class="form-group">
             <label>选择文件</label>
-            <div class="upload-dropzone"
-                 @click="$refs.fileInput.click()"
-                 @dragover.prevent="$el.classList.add('dragover')"
-                 @dragleave.prevent="$el.classList.remove('dragover')"
-                 @drop.prevent="
-                    $el.classList.remove('dragover');
-                    const files = $event.dataTransfer.files;
-                    if (files.length) {
-                        $refs.fileInput.files = files;
-                        handleFileSelect({ target: { files: [files[0]] } });
-                    }
-                 ">
-                <template x-if="!selectedFile">
-                    <div class="dropzone-placeholder">
-                        <div class="dropzone-icon">📤</div>
-                        <p>点击或拖拽文件到此处</p>
-                    </div>
-                </template>
-                <template x-if="selectedFile">
-                    <div class="dropzone-file">
-                        <p x-text="selectedFile.name"></p>
-                        <p class="dropzone-size" x-text="(selectedFile.size / 1024).toFixed(1) + ' KB'"></p>
-                    </div>
-                </template>
+            <div class="upload-dropzone" id="uploadDropzone">
+                <div class="dropzone-placeholder" id="dropzonePlaceholder">
+                    <div class="dropzone-icon">📤</div>
+                    <p>点击或拖拽文件到此处</p>
+                </div>
+                <div class="dropzone-file" id="dropzoneFile" style="display:none">
+                    <p id="dropzoneFileName"></p>
+                    <p class="dropzone-size" id="dropzoneFileSize"></p>
+                </div>
             </div>
-            <input type="file" id="file" name="file" x-ref="fileInput" @change="handleFileSelect" hidden required>
+            <input type="file" id="fileInput" name="file" style="display:none" required>
         </div>
 
-        <!-- SHA256 for executables -->
-        <div class="form-group" x-show="isExecutable" x-transition>
-            <label for="sha256">SHA256 校验值</label>
+        <div class="form-group" id="sha256Group" style="display:none">
+            <label for="sha256">SHA256 校验值 <span style="color:var(--gray-400);font-weight:400">（可执行文件必填）</span></label>
             <input type="text" id="sha256" name="sha256" class="form-control" placeholder="输入文件 SHA256 哈希值">
         </div>
 
-        <!-- Upload Progress -->
-        <div class="upload-progress" x-show="uploading" x-transition>
-            <div class="progress-bar">
-                <div class="progress-fill" :style="'width: ' + uploadProgress + '%'"></div>
-            </div>
-            <p class="progress-text" x-text="'上传中 ' + uploadProgress + '%'"></p>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block" :disabled="uploading">提交上传</button>
+        <button type="submit" class="btn btn-primary btn-block">上传</button>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('fileInput');
+    var placeholder = document.getElementById('dropzonePlaceholder');
+    var fileInfo = document.getElementById('dropzoneFile');
+    var fileName = document.getElementById('dropzoneFileName');
+    var fileSize = document.getElementById('dropzoneFileSize');
+    var shaGroup = document.getElementById('sha256Group');
+
+    function showFile(file) {
+        placeholder.style.display = 'none';
+        fileInfo.style.display = '';
+        fileName.textContent = file.name;
+        fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+        var ext = file.name.toLowerCase().split('.').pop();
+        shaGroup.style.display = (['exe','msi','apk','deb','rpm'].indexOf(ext) >= 0) ? '' : 'none';
+    }
+
+    input.addEventListener('change', function() { if (this.files[0]) showFile(this.files[0]); });
+
+    var dz = document.getElementById('uploadDropzone');
+    dz.addEventListener('click', function() { input.click(); });
+    dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', function() { dz.classList.remove('dragover'); });
+    dz.addEventListener('drop', function(e) {
+        e.preventDefault(); dz.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            showFile(e.dataTransfer.files[0]);
+        }
+    });
+});
+</script>
 {% endblock %}

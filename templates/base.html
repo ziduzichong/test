@@ -5,15 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}电子科学与技术协会{% endblock %}</title>
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <!-- CKEditor / Quill -->
-    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.min.js"></script>
-    <!-- Custom CSS -->
+    <!-- HTMX (local) -->
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+    <!-- Custom CSS/JS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/quill.snow.css' %}">
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
+    <script src="{% static 'js/quill.min.js' %}"></script>
+    <script src="{% static 'js/app.js' %}" defer></script>
 </head>
 <body>
     <!-- Navbar -->
@@ -57,21 +56,14 @@
     </footer>
 
     <!-- Toast Container -->
-    <div id="toast-container" x-data="{ toasts: [] }" x-init="
-        {% if messages %}
-            {% for message in messages %}
-                setTimeout(() => { toasts.push({ id: Date.now(), text: '{{ message|escapejs }}', type: '{{ message.tags|default:"info" }}' }); }, {{ forloop.counter0 }}00);
-            {% endfor %}
-        {% endif %}
-    ">
-        <template x-for="toast in toasts" :key="toast.id">
-            <div class="toast" :class="'toast-' + toast.type" x-show="toast.visible !== false"
-                 x-init="setTimeout(() => { toast.visible = false; setTimeout(() => toasts.splice(toasts.indexOf(toast), 1), 300); }, 4000)">
-                <span x-text="toast.text"></span>
-                <button class="toast-close" @click="toast.visible = false">&times;</button>
-            </div>
-        </template>
-    </div>
+    <div id="toast-container"></div>
+    {% if messages %}
+    <script>
+    {% for message in messages %}
+    showToast('{{ message|escapejs }}', '{{ message.tags|default:"info" }}');
+    {% endfor %}
+    </script>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
 </body>

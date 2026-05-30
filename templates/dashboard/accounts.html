@@ -1,97 +1,28 @@
 {% extends "base.html" %}
-{% block title %}账号管理 — 电子科学与技术协会{% endblock %}
-
+{% block title %}账号管理{% endblock %}
 {% block content %}
-<div class="page-header page-header-between">
+<div class="page-header">
     <h1>账号管理</h1>
-    <button class="btn btn-primary" @click="$dispatch('open-modal', 'account-modal')"
-            x-data
-            onclick="document.getElementById('account-modal').__x.$data.show = true;">创建账号</button>
+    <button class="btn btn-primary" onclick="openAccountCreator()">+ 创建账号</button>
 </div>
 
-{% if accounts %}
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>用户名</th>
-                    <th>显示名</th>
-                    <th>角色</th>
-                    <th>创建时间</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for acc in accounts %}
-                    <tr>
-                        <td>{{ acc.username }}</td>
-                        <td>{{ acc.display_name|default:acc.username }}</td>
-                        <td>
-                            {% if acc.role == 'admin' %}
-                                <span class="tag tag-admin">管理员</span>
-                            {% else %}
-                                <span class="tag tag-editor">编辑者</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ acc.created_at|date:"Y-m-d H:i" }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+{% if users %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>用户名</th><th>显示名</th><th>角色</th><th>创建时间</th></tr></thead>
+    <tbody>
+        {% for u in users %}
+        <tr>
+            <td><strong>{{ u.username }}</strong></td>
+            <td>{{ u.display_name|default:u.username }}</td>
+            <td><span class="tag {% if u.role == 'admin' %}tag-exam{% else %}tag-news{% endif %}">{{ u.get_role_display }}</span></td>
+            <td style="font-size:.85rem;color:var(--gray-400)">{{ u.date_joined|date:"Y-m-d" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
 {% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">🔑</div>
-        <p>暂无账号</p>
-    </div>
+<div class="empty-state"><div class="empty-state-icon">🔑</div><p>暂无用户</p></div>
 {% endif %}
-
-<!-- Account Modal -->
-<div class="modal-overlay" x-data="{
-    show: false,
-    formUsername: '',
-    formPassword: '',
-    formDisplayName: '',
-    formRole: 'editor',
-    save() {
-        const formData = new FormData();
-        formData.append('username', this.formUsername);
-        formData.append('password', this.formPassword);
-        formData.append('display_name', this.formDisplayName);
-        formData.append('role', this.formRole);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        fetch('/api/accounts/create/', { method: 'POST', body: formData }).then(() => location.reload());
-    }
-}" x-show="show" x-transition style="display: none;">
-    <div class="modal" @click.stop>
-        <div class="modal-header">
-            <h2>创建账号</h2>
-            <button class="modal-close" @click="show = false">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label for="account-username">用户名</label>
-                <input type="text" id="account-username" class="form-control" x-model="formUsername" required>
-            </div>
-            <div class="form-group">
-                <label for="account-password">密码</label>
-                <input type="password" id="account-password" class="form-control" x-model="formPassword" required>
-            </div>
-            <div class="form-group">
-                <label for="account-display-name">显示名</label>
-                <input type="text" id="account-display-name" class="form-control" x-model="formDisplayName">
-            </div>
-            <div class="form-group">
-                <label for="account-role">角色</label>
-                <select id="account-role" class="form-control" x-model="formRole">
-                    <option value="editor">编辑者</option>
-                    <option value="admin">管理员</option>
-                </select>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" @click="show = false">取消</button>
-            <button class="btn btn-primary" @click="save">创建</button>
-        </div>
-    </div>
-</div>
 {% endblock %}

@@ -1,132 +1,46 @@
 {% extends "base.html" %}
-{% block title %}成员管理 — 电子科学与技术协会{% endblock %}
-
+{% block title %}成员管理{% endblock %}
 {% block content %}
-<div class="page-header page-header-between">
+<div class="page-header">
     <h1>成员管理</h1>
-    <button class="btn btn-primary" @click="$dispatch('open-modal', 'member-modal')"
-            x-data
-            onclick="document.getElementById('member-modal').__x.$data.editMode = false; document.getElementById('member-modal').__x.$data.show = true;">添加成员</button>
+    <button class="btn btn-primary" onclick="openMemEditor(null)">+ 添加成员</button>
 </div>
 
 {% if members %}
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>职位</th>
-                    <th>技能</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for m in members %}
-                    <tr id="member-row-{{ m.id }}">
-                        <td>{{ m.name }}</td>
-                        <td>{{ m.position|default:"-" }}</td>
-                        <td>
-                            {% if m.skills %}
-                                {% for skill in m.skills|slice:":3" %}
-                                    <span class="tag tag-skill">{{ skill }}</span>
-                                {% endfor %}
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="table-actions">
-                            <button class="btn btn-sm btn-outline"
-                                    @click="
-                                        editMode = true;
-                                        formId = {{ m.id }};
-                                        formName = '{{ m.name|escapejs }}';
-                                        formPosition = '{{ m.position|escapejs }}';
-                                        formBio = '{{ m.bio|escapejs }}';
-                                        formSkills = '{{ m.skills|join:','|escapejs }}';
-                                        formContact = '{{ m.contact|escapejs }}';
-                                        formContactPublic = {{ m.contact_public|yesno:'true,false' }};
-                                        show = true;
-                                    "
-                                    x-data="{ editMode: false, formId: 0, formName: '', formPosition: '', formBio: '', formSkills: '', formContact: '', formContactPublic: false, show: false }">编辑</button>
-                            <button class="btn btn-sm btn-danger"
-                                    hx-post="/api/members/{{ m.id }}/delete/"
-                                    hx-target="#member-row-{{ m.id }}"
-                                    hx-swap="outerHTML"
-                                    hx-confirm="确定删除 {{ m.name }}？">删除</button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-{% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">👥</div>
-        <p>暂无成员</p>
-    </div>
-{% endif %}
-
-<!-- Member Modal -->
-<div class="modal-overlay" x-data="{
-    show: false,
-    editMode: false,
-    formId: 0,
-    formName: '',
-    formPosition: '',
-    formBio: '',
-    formSkills: '',
-    formContact: '',
-    formContactPublic: false,
-    save() {
-        const url = this.editMode ? '/api/members/' + this.formId + '/edit/' : '/api/members/create/';
-        const formData = new FormData();
-        formData.append('name', this.formName);
-        formData.append('position', this.formPosition);
-        formData.append('bio', this.formBio);
-        formData.append('skills', this.formSkills);
-        formData.append('contact', this.formContact);
-        formData.append('contact_public', this.formContactPublic ? 'true' : 'false');
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        fetch(url, { method: 'POST', body: formData }).then(() => location.reload());
-    }
-}" x-show="show" x-transition style="display: none;">
-    <div class="modal" @click.stop>
-        <div class="modal-header">
-            <h2 x-text="editMode ? '编辑成员' : '添加成员'"></h2>
-            <button class="modal-close" @click="show = false">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label for="member-name">姓名</label>
-                <input type="text" id="member-name" class="form-control" x-model="formName" required>
-            </div>
-            <div class="form-group">
-                <label for="member-position">职位</label>
-                <input type="text" id="member-position" class="form-control" x-model="formPosition">
-            </div>
-            <div class="form-group">
-                <label for="member-bio">简介</label>
-                <textarea id="member-bio" class="form-control" x-model="formBio" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="member-skills">技能（逗号分隔）</label>
-                <input type="text" id="member-skills" class="form-control" x-model="formSkills" placeholder="如：C语言, PCB设计, 嵌入式">
-            </div>
-            <div class="form-group">
-                <label for="member-contact">联系方式</label>
-                <input type="text" id="member-contact" class="form-control" x-model="formContact">
-            </div>
-            <div class="form-group form-check">
-                <label>
-                    <input type="checkbox" x-model="formContactPublic">
-                    公开联系方式
-                </label>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline" @click="show = false">取消</button>
-            <button class="btn btn-primary" @click="save">保存</button>
-        </div>
-    </div>
+<div class="table-wrap">
+<table>
+    <thead><tr><th>姓名</th><th>职位</th><th>技能</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody>
+        {% for m in members %}
+        <tr id="mem-row-{{ m.id }}"
+            data-name="{{ m.name|escape }}"
+            data-position="{{ m.position|escape }}"
+            data-bio="{{ m.bio|escape }}"
+            data-contact="{{ m.contact|escape }}"
+            data-skills="{{ m.skills|escape }}"
+            data-joined="{{ m.joined_at }}"
+            data-order="{{ m.order }}"
+            data-contact-public="{{ m.contact_public|lower }}"
+            data-active="{{ m.is_active|lower }}">
+            <td><strong>{{ m.name }}</strong></td>
+            <td>{{ m.position }}</td>
+            <td style="font-size:.85rem;color:var(--gray-500)">{{ m.skills|truncatechars:40 }}</td>
+            <td>{% if m.is_active %}<span style="color:var(--success)">展示中</span>{% else %}<span style="color:var(--gray-400)">隐藏</span>{% endif %}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="openMemEditor({{ m.id }})">编辑</button>
+                <form method="post" style="display:inline" onsubmit="return confirm('确定删除？')">
+                    {% csrf_token %}
+                    <input type="hidden" name="id" value="{{ m.id }}">
+                    <input type="hidden" name="_delete" value="1">
+                    <button class="btn btn-sm btn-danger">删除</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 </div>
+{% else %}
+<div class="empty-state"><div class="empty-state-icon">👥</div><p>暂无成员</p></div>
+{% endif %}
 {% endblock %}

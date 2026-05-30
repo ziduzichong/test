@@ -210,8 +210,15 @@ def announcement_manage(request):
 
 @login_required
 def member_manage(request):
-    """成员管理：GET 展示列表，POST 创建或编辑成员（通过 id 参数区分）"""
+    """成员管理：GET 展示列表，POST 创建/编辑/删除成员"""
     if request.method == 'POST':
+        # 删除操作
+        if request.POST.get('_delete') == '1':
+            member = get_object_or_404(Member, pk=request.POST.get('id'))
+            member.delete()
+            messages.success(request, '成员已删除')
+            return redirect('/dashboard/members/')
+
         member_id = request.POST.get('id')
         name = request.POST.get('name', '').strip()
         position = request.POST.get('position', '')
@@ -271,7 +278,42 @@ def member_manage(request):
 
 @login_required
 def award_manage(request):
-    """奖项管理：GET 展示列表"""
+    """奖项管理：GET 展示列表，POST 创建/编辑/删除"""
+    if request.method == 'POST':
+        # 删除操作
+        if request.POST.get('_delete') == '1':
+            award = get_object_or_404(Award, pk=request.POST.get('id'))
+            award.delete()
+            messages.success(request, '奖项已删除')
+            return redirect('/dashboard/awards/')
+
+        award_id = request.POST.get('id')
+        title = request.POST.get('title', '').strip()
+        competition = request.POST.get('competition', '')
+        rank = request.POST.get('rank', 'other')
+        description = request.POST.get('description', '')
+        award_date = request.POST.get('award_date', '') or None
+
+        if not title:
+            messages.error(request, '奖项名称不能为空')
+        elif award_id:
+            award = get_object_or_404(Award, pk=award_id)
+            award.title = title
+            award.competition = competition
+            award.rank = rank
+            award.description = description
+            if award_date:
+                award.award_date = award_date
+            award.save()
+            messages.success(request, '奖项已更新')
+        else:
+            Award.objects.create(
+                title=title, competition=competition, rank=rank,
+                description=description, award_date=award_date,
+            )
+            messages.success(request, '奖项已创建')
+        return redirect('/dashboard/awards/')
+
     awards = Award.objects.all()
     return render(request, 'dashboard/awards.html', {
         'awards': awards,
