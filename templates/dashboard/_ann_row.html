@@ -1,0 +1,22 @@
+<tr id="ann-row-{{ a.id }}"
+    data-title="{{ a.title|escape }}"
+    data-category="{{ a.category }}"
+    data-content="{{ a.content|escape }}"
+    data-published="{{ a.is_published|lower }}">
+    <td><strong>{{ a.title }}</strong></td>
+    <td><span class="tag tag-{{ a.category }}">{{ a.get_category_display }}</span></td>
+    <td>{% if a.is_published %}<span style="color:var(--success)">已发布</span>{% else %}<span style="color:var(--gray-400)">草稿</span>{% endif %}</td>
+    <td style="font-size:.85rem;color:var(--gray-400)">{{ a.created_at|date:"Y-m-d H:i" }}</td>
+    <td>
+        <button class="btn btn-sm btn-outline" onclick="openAnnEditor({{ a.id }})">编辑</button>
+        <button class="btn btn-sm btn-outline"
+            hx-post="{% url 'announcement_toggle' a.id %}"
+            hx-swap="outerHTML"
+            hx-target="#ann-row-{{ a.id }}">{% if a.is_published %}下架{% else %}发布{% endif %}</button>
+        <button class="btn btn-sm btn-danger"
+            hx-post="{% url 'announcement_delete_api' a.id %}"
+            hx-swap="outerHTML"
+            hx-target="#ann-row-{{ a.id }}"
+            hx-confirm="确定删除？">删除</button>
+    </td>
+</tr>

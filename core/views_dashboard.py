@@ -360,34 +360,40 @@ def account_manage(request):
 
 @login_required
 def announcement_toggle(request, pk):
-    """切换公告发布状态：POST 请求，返回 JSON"""
+    """切换公告发布状态：返回更新后的行 HTML 供 HTMX 替换"""
     if request.method == 'POST':
         ann = get_object_or_404(Announcement, pk=pk)
         ann.is_published = not ann.is_published
         ann.save(update_fields=['is_published'])
-        return JsonResponse({'ok': True, 'is_published': ann.is_published})
+        return _render_announcement_row(ann)
     return JsonResponse({'ok': False}, status=405)
 
 
 @login_required
 def file_delete_api(request, pk):
-    """删除文件（API）：POST 删除数据库记录及磁盘文件，返回 JSON"""
+    """删除文件（API）：POST 删除并返回空响应让 HTMX 移除行"""
     if request.method == 'POST':
         f = get_object_or_404(UploadedFile, pk=pk)
-        f.file.delete(save=False)  # 删除物理文件
+        f.file.delete(save=False)
         f.delete()
-        return JsonResponse({'ok': True})
+        return HttpResponse('')
     return JsonResponse({'ok': False}, status=405)
 
 
 @login_required
 def announcement_delete_api(request, pk):
-    """删除公告（API）：POST 删除公告，返回 JSON"""
+    """删除公告（API）：POST 删除并返回空响应让 HTMX 移除行"""
     if request.method == 'POST':
         ann = get_object_or_404(Announcement, pk=pk)
         ann.delete()
-        return JsonResponse({'ok': True})
+        return HttpResponse('')
     return JsonResponse({'ok': False}, status=405)
+
+
+def _render_announcement_row(ann):
+    """渲染公告管理表格中的单行 HTML"""
+    from django.template.loader import render_to_string
+    return HttpResponse(render_to_string('dashboard/_ann_row.html', {'a': ann}))
 
 
 @login_required
