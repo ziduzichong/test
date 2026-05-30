@@ -162,9 +162,15 @@ tr:hover td{background:var(--gray-50)}
 .dashboard-content{min-height:400px}
 
 /* ---- Stats ---- */
-.stat-card{text-align:center;padding:24px 16px}
+.card-stat{text-align:center;padding:24px 16px}
 .stat-number{font-size:2rem;font-weight:700;color:var(--primary);line-height:1.2}
 .stat-label{font-size:.85rem;color:var(--gray-500);margin-top:4px}
+.stat-icon{font-size:2rem;margin-bottom:8px}
+.stat-icon-blue{color:var(--primary)}
+.stat-icon-green{color:var(--success)}
+.stat-icon-purple{color:#7c3aed}
+.stat-icon-orange{color:#ea580c}
+.dashboard-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid var(--gray-200)}
 
 /* ---- File Upload ---- */
 .upload-card{max-width:600px;margin:0 auto}

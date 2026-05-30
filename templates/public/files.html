@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}公开资料 — 电子科学与技术协会{% endblock %}
+{% block content %}
+<div class="page-header"><h1>公开资料</h1></div>
+
+<div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap">
+    <a href="{% url 'public_files' %}" class="btn btn-filter {% if not current_category %}btn-filter-active{% endif %}">全部</a>
+    <a href="{% url 'public_files' %}?category=learning" class="btn btn-filter {% if current_category == 'learning' %}btn-filter-active{% endif %}">学习资料</a>
+    <a href="{% url 'public_files' %}?category=project" class="btn btn-filter {% if current_category == 'project' %}btn-filter-active{% endif %}">项目代码</a>
+    <a href="{% url 'public_files' %}?category=circuit" class="btn btn-filter {% if current_category == 'circuit' %}btn-filter-active{% endif %}">电路设计</a>
+    <a href="{% url 'public_files' %}?category=video" class="btn btn-filter {% if current_category == 'video' %}btn-filter-active{% endif %}">教学视频</a>
+    <a href="{% url 'public_files' %}?category=tool" class="btn btn-filter {% if current_category == 'tool' %}btn-filter-active{% endif %}">软件工具</a>
+</div>
+
+{% if files %}
+<div class="table-wrap">
+<table>
+    <thead><tr><th>文件名</th><th>分类</th><th>大小</th><th>下载</th></tr></thead>
+    <tbody>
+        {% for f in files %}
+        <tr>
+            <td><strong>{{ f.original_name }}</strong>{% if f.description %} <span style="color:var(--gray-400);font-size:.85rem">— {{ f.description }}</span>{% endif %}</td>
+            <td><span class="tag tag-{{ f.category }}">{{ f.get_category_display }}</span></td>
+            <td style="font-size:.85rem;color:var(--gray-400)">{{ f.file_size|filesizeformat }}</td>
+            <td><a href="{% url 'public_download' f.id %}" class="btn btn-sm btn-outline">下载</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state"><div class="empty-state-icon">📂</div><p>暂无公开资料</p></div>
+{% endif %}
+{% endblock %}

@@ -15,6 +15,8 @@ urlpatterns = [
     path('members/<int:pk>/', views_public.member_detail, name='member_detail'),
     path('awards/', views_public.award_list, name='award_list'),
     path('search/', views_public.search, name='search'),
+    path('files/public/', views_public.public_file_list, name='public_files'),
+    path('files/public/<int:pk>/download/', views_public.public_file_download, name='public_download'),
 
     # ============================================================
     # 认证
@@ -46,4 +48,5 @@ urlpatterns = [
     path('api/announcements/<int:pk>/toggle/', views_dashboard.announcement_toggle, name='announcement_toggle'),
     path('api/files/<int:pk>/delete/', views_dashboard.file_delete_api, name='file_delete_api'),
     path('api/announcements/<int:pk>/delete/', views_dashboard.announcement_delete_api, name='announcement_delete_api'),
+    path('api/upload-image/', views_dashboard.upload_image, name='upload_image'),
 ]

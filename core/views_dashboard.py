@@ -41,9 +41,9 @@ def index(request):
     )['total'] or 0
 
     context = {
-        'total_files': UploadedFile.objects.count(),
-        'total_announcements': Announcement.objects.count(),
-        'total_members': Member.objects.count(),
+        'file_count': UploadedFile.objects.count(),
+        'announcement_count': Announcement.objects.count(),
+        'member_count': Member.objects.filter(is_active=True).count(),
         'total_downloads': total_downloads,
     }
     return render(request, 'dashboard/index.html', context)
@@ -387,4 +387,21 @@ def announcement_delete_api(request, pk):
         ann = get_object_or_404(Announcement, pk=pk)
         ann.delete()
         return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False}, status=405)
+
+
+@login_required
+def upload_image(request):
+    """Quill 编辑器图片上传：保存到 media/uploads/images/，返回 URL"""
+    if request.method == 'POST':
+        img = request.FILES.get('image')
+        if not img:
+            return JsonResponse({'ok': False, 'error': '未选择图片'}, status=400)
+        import os, time
+        from django.conf import settings
+        from django.core.files.storage import default_storage
+        ext = os.path.splitext(img.name)[1] or '.png'
+        name = f'uploads/images/{int(time.time())}_{img.name}'
+        path = default_storage.save(name, img)
+        return JsonResponse({'ok': True, 'url': settings.MEDIA_URL + path})
     return JsonResponse({'ok': False}, status=405)

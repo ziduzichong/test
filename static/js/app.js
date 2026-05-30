@@ -86,8 +86,52 @@ function openAnnEditor(id) {
       '<button class="btn btn-primary" id="saveAnnBtn">保存</button>' +
     '</div>';
   openModal(html);
-  // 初始化 Quill
-  var quill = new Quill('#quillEditor', { theme: 'snow', placeholder: '输入公告内容...' });
+  // 初始化 Quill（含图片上传 + 附件链接）
+  var quill = new Quill('#quillEditor', {
+    theme: 'snow',
+    placeholder: '输入公告内容...',
+    modules: {
+      toolbar: {
+        container: [
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'header': 1 }, { 'header': 2 }],
+          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+          [{ 'script': 'sub' }, { 'script': 'super' }],
+          [{ 'indent': '-1' }, { 'indent': '+1' }],
+          [{ 'direction': 'rtl' }],
+          [{ 'size': ['small', false, 'large', 'huge'] }],
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'font': [] }],
+          [{ 'align': [] }],
+          ['link', 'image', 'video'],
+          ['clean']
+        ],
+        handlers: {
+          image: function() {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+            input.onchange = function() {
+              var file = input.files[0];
+              var fd = new FormData();
+              fd.append('image', file);
+              fd.append('csrfmiddlewaretoken', getCSRF());
+              var range = this.quill.getSelection();
+              fetch('/api/upload-image/', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                  if (data.ok) { this.quill.insertEmbed(range.index, 'image', data.url); }
+                  else { showToast('图片上传失败: ' + (data.error || '未知错误'), 'error'); }
+                }.bind(this));
+            }.bind(this);
+          }
+        }
+      }
+    }
+  });
   if (content) quill.root.innerHTML = content;
   // 保存
   document.getElementById('saveAnnBtn').addEventListener('click', function() {

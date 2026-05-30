@@ -4,6 +4,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import FileResponse, Http404
 from core.models import Announcement, Member, Award, UploadedFile
 
 
@@ -92,3 +93,26 @@ def search(request):
         'announcements': announcements,
         'files': files,
     })
+
+
+def public_file_list(request):
+    """公开文件列表：仅展示 is_public=True 的文件，无需登录"""
+    category = request.GET.get('category')
+    qs = UploadedFile.objects.filter(is_public=True)
+    if category:
+        qs = qs.filter(category=category)
+    return render(request, 'public/files.html', {
+        'files': qs,
+        'current_category': category,
+    })
+
+
+def public_file_download(request, pk):
+    """公开文件下载：仅允许下载 is_public=True 的文件，无需登录"""
+    f = get_object_or_404(UploadedFile, pk=pk, is_public=True)
+    f.download_count += 1
+    f.save(update_fields=['download_count'])
+    try:
+        return FileResponse(f.file.open('rb'), as_attachment=True, filename=f.original_name)
+    except FileNotFoundError:
+        raise Http404('文件不存在')
