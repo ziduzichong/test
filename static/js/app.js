@@ -270,7 +270,14 @@ function openAccountCreator() {
 // ========== 辅助 ==========
 function getCSRF() {
   var el = document.querySelector('[name=csrfmiddlewaretoken]');
-  return el ? el.value : '';
+  if (el) return el.value;
+  // Fallback: read from Django's csrftoken cookie
+  var cookies = document.cookie.split(';');
+  for (var i = 0; i < cookies.length; i++) {
+    var c = cookies[i].trim();
+    if (c.startsWith('csrftoken=')) return c.substring(10);
+  }
+  return '';
 }
 function escAttr(s) { return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escHtml(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
