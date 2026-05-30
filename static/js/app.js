@@ -307,6 +307,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// ========== HTMX CSRF 配置 ==========
+document.body.addEventListener('htmx:configRequest', function(e) {
+  e.detail.headers['X-CSRFToken'] = getCSRF();
+});
+
 // ========== HTMX afterSwap 重新绑定关闭事件 ==========
 if (document.body) document.body.addEventListener('htmx:afterSwap', function(e) {
   e.target.querySelectorAll('.modal-close, .modal-close-btn').forEach(function(b) {
