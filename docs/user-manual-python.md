@@ -1,28 +1,41 @@
 # 电子科学与技术协会网站 — 测试指南
 
-## 1. 快速启动（Windows）
+## 1. 快速启动
+
+### 方式一：Docker（推荐，零环境问题）
 
 ```powershell
-# 克隆
 git clone <仓库地址> esta-website
 cd esta-website
+docker compose up -d
+```
 
-# 安装
+首次启动自动完成：`.env 生成` → `migrate` → `setup（管理员+种子数据）` → `collectstatic` → `启动`。
+
+浏览器打开 http://127.0.0.1:8000，管理员 **admin / admin123**。
+
+常用命令：
+```powershell
+docker compose logs -f        # 查看日志
+docker compose restart        # 重启
+docker compose down           # 停止
+docker compose up -d --build  # 重新构建
+```
+
+### 方式二：虚拟环境（无需 Docker）
+
+```powershell
+git clone <仓库地址> esta-website
+cd esta-website
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
-
-# 初始化（建表 + 管理员 + 示例数据）
 python manage.py setup
-
-# 启动
 python manage.py runserver
 ```
 
-浏览器打开 http://127.0.0.1:8000，管理员 **admin / admin123**。
-
-> 如果 Django 没装：`E:\Anaconda\python.exe -m venv .venv` 指定 Anaconda Python 创建虚拟环境。
+> 如果 `python` 命令不对：用 `E:\Anaconda\python.exe` 替代。
 
 ---
 

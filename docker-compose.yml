@@ -4,6 +4,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      # 数据持久化：数据库和上传文件保留在宿主机，容器销毁不丢数据
       - ./data:/app/data
       - ./media:/app/media
     environment:

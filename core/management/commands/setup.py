@@ -11,6 +11,9 @@ import datetime
 class Command(BaseCommand):
     help = '一键初始化：数据库迁移 + 管理员账号 + 示例数据'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--noinput', action='store_true', help='非交互模式，跳过确认')
+
     def handle(self, **options):
         self.stdout.write('=' * 50)
         self.stdout.write('  电子科学与技术协会网站 — 初始化')
