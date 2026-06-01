@@ -2,27 +2,13 @@
 
 ## 1. 快速启动
 
-### 方式一：Docker（推荐，零环境问题）
+### 方式一：双击 start.bat（推荐，仅需 Python 3.12+）
 
-```powershell
-git clone <仓库地址> esta-website
-cd esta-website
-docker compose up -d
-```
-
-首次启动自动完成：`.env 生成` → `migrate` → `setup（管理员+种子数据）` → `collectstatic` → `启动`。
+资源管理器里双击 `start.bat`，自动完成：创建虚拟环境 → 装依赖 → 生成配置 → 初始化数据库 → 启动服务器。
 
 浏览器打开 http://127.0.0.1:8000，管理员 **admin / admin123**。
 
-常用命令：
-```powershell
-docker compose logs -f        # 查看日志
-docker compose restart        # 重启
-docker compose down           # 停止
-docker compose up -d --build  # 重新构建
-```
-
-### 方式二：虚拟环境（无需 Docker）
+### 方式二：命令行
 
 ```powershell
 git clone <仓库地址> esta-website
@@ -35,7 +21,13 @@ python manage.py setup
 python manage.py runserver
 ```
 
-> 如果 `python` 命令不对：用 `E:\Anaconda\python.exe` 替代。
+### 方式三：Docker（NAS / 服务器部署）
+
+```powershell
+docker compose -p esta up -d
+```
+
+> Docker 适合已在运行 Docker 的 NAS 或服务器。Windows 测试直接用方式一。
 
 ---
 
